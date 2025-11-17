@@ -1,0 +1,9 @@
+# .gitignore
+__pycache__/
+*.pyc
+data/
+models/
+.env
+.vscode/
+*.h5
+*.pt
