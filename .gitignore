@@ -2,8 +2,16 @@
 __pycache__/
 *.pyc
 data/
+data/raw/
+data/processed/
+data/models/
+data/annotations/
 models/
+*.mp4
+*.json
+*.zip
 .env
+.venv/
 .vscode/
 *.h5
 *.pt
