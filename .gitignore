@@ -13,5 +13,6 @@ models/
 .env
 .venv/
 .vscode/
+desktop.ini
 *.h5
 *.pt
