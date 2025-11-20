@@ -39,6 +39,14 @@ def extract_frames(video_path, output_folder, target_fps=5):
 
     cap.release()
     print(f"Done! Saved {saved_count} frames to {output_folder}")
+  
+if __name__ == "__main__":
+    extract_frames(
+        video_path="data/raw/videos/task_kam2_gh078416.mp4",
+        output_folder="data/processed/sample_frames",
+        target_fps=5
+    )
+
 
 
 
