@@ -2,6 +2,9 @@ import argparse
 import os
 import json
 import uuid
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), "src"))
+
 
 from combatcv.preprocessing.extract_frames import extract_frames
 from combatcv.detection.pose_estimation import process_frame_folder
@@ -48,8 +51,8 @@ def process_video(video_path, target_fps=5):
 
     # 5. Detect punches
     print("Detecting punches...")
-    raw = detect_punches(speeds)
-    punches = merge_close_punches(raw)
+    raw_punches = detect_punches(speeds, sequence)
+    punches = merge_close_punches(raw_punches)
 
     # 6. Count left/right
     left_count = sum(1 for side, _ in punches if side == "left")
@@ -76,12 +79,12 @@ def process_video(video_path, target_fps=5):
     print(f"Results saved to {output_file}")
     print(f"Total punches: {len(punches)}")
 
-        # 8. Create visualization output path
+    # 8. Create visualization output path
     video_name = os.path.splitext(os.path.basename(video_path))[0]
     viz_output = os.path.join(result_dir, f"{video_name}_visualized.mp4")
 
     # 9. Generate visualization video
-    visualize_video(video_path, pose_dir, punches, viz_output)
+    visualize_video(video_path, pose_dir, punches, viz_output, pose_fps=target_fps)
 
     print(f"Visualization saved to {viz_output}")
 

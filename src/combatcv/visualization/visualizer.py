@@ -37,7 +37,14 @@ def draw_pose(image, keypoints, punch_left=False, punch_right=False):
         color = (255, 0, 0) if punch_left else (255, 255, 0)
         cv2.circle(image, (lx, ly), 10, color, -1)
 
-def visualize_video(original_video, pose_folder, punch_frames, output_path):
+def visualize_video(original_video, pose_folder, punch_frames, output_path, pose_fps=5):
+    """
+    original_video: path to the original mp4
+    pose_folder: folder with pose JSONs (saved at pose_fps)
+    punch_frames: list of (side, pose_frame_index) from motion_analysis
+    pose_fps: fps used when extracting frames / poses (e.g. 5)
+    """
+
     cap = cv2.VideoCapture(original_video)
     if not cap.isOpened():
         print("ERROR: Cannot open video.")
@@ -48,12 +55,21 @@ def visualize_video(original_video, pose_folder, punch_frames, output_path):
     width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
+    if fps == 0:
+      fps = 30  # fallback
+
+    frame_interval = max(1, int(round(fps / pose_fps)))
+
     # Video writer
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
     out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
 
     # Build quick punch lookup
-    punch_lookup = {frame: side for (side, frame) in punch_frames}
+    # Map pose-frame punches onto video-frame indices
+    punch_lookup = {}
+    for side, pose_frame_idx in punch_frames:
+      video_frame_idx = pose_frame_idx * frame_interval
+      punch_lookup[video_frame_idx] = side
 
     # Maintain running counts
     left_so_far = 0
@@ -65,7 +81,7 @@ def visualize_video(original_video, pose_folder, punch_frames, output_path):
     if len(pose_files) != frame_count:
         print("Warning: frame count and pose count differ (normal for reduced FPS).")
 
-    current_pose_index = 0
+    num_pose_frames = len(pose_files)
 
     print("Generating visualization video...")
 
@@ -74,16 +90,15 @@ def visualize_video(original_video, pose_folder, punch_frames, output_path):
         if not ret:
             break
 
-        # find nearest pose file
-        if current_pose_index < len(pose_files) - 1:
-            pose_file = pose_files[current_pose_index]
+        # Decide which pose frame to use for this video frame
+        pose_index = i // frame_interval
+        if pose_index >= num_pose_frames:
+            keypoints = None
+        else:
+            pose_file = pose_files[pose_index]
             with open(os.path.join(pose_folder, pose_file)) as f:
                 data = json.load(f)
             keypoints = data["pose_keypoints"]
-
-            current_pose_index += 1
-        else:
-            keypoints = None
 
         punch_left = False
         punch_right = False
